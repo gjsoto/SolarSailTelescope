@@ -140,7 +140,7 @@ class CR3BP_SolarSail_Ideal(CR3BP_Thruster_Unconstrained):
         x,y,z,dx,dy,dz,L1,L2,L3,L4,L5,L6 = sB
 #        x,y,z,dx,dy,dz,L1,L2,L3,L4,L5,L6,tf = sB
         mu = self.mu
-        g0 = self.g0
+#        g0 = self.g0
         
         p1 = np.array([x+mu,y,z])
         p1 = p1/np.linalg.norm(p1,axis=0)
