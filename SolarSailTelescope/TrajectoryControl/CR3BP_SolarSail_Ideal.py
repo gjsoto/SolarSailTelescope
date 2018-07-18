@@ -1,3 +1,4 @@
+from CR3BP_Thruster_Unconstrained import CR3BP_Thruster_Unconstrained
 import numpy as np
 import pylab as pl
 import astropy as astro
@@ -19,9 +20,10 @@ import time
 
 ##################################################
 
-class CR3BP_SolarSail_Ideal(object):
+class CR3BP_SolarSail_Ideal(CR3BP_Thruster_Unconstrained):
     
-    def __init__(self):
+    def __init__(self,**specs) :
+        CR3BP_Thruster_Unconstrained.__init__(self,**specs) 
         self.mu = const.M_earth/ (const.M_earth + const.M_sun)
 
         coeff = [1, 3-self.mu, 3-2*self.mu, -self.mu, -2*self.mu, -self.mu]
@@ -93,12 +95,13 @@ class CR3BP_SolarSail_Ideal(object):
         
         return f
     
-    def EoM_Adjoint(self,t,state):
+    def EoM_Adjoint_IS(self,t,state):
         
         mu = self.mu
         g0 = self.g0
         
-        x,y,z,dx,dy,dz,L1,L2,L3,L4,L5,L6,tf = state
+        x,y,z,dx,dy,dz,L1,L2,L3,L4,L5,L6 = state
+#        x,y,z,dx,dy,dz,L1,L2,L3,L4,L5,L6,tf = state
 
         f = np.zeros(state.shape)
         
@@ -125,15 +128,17 @@ class CR3BP_SolarSail_Ideal(object):
         f[9,:]    = -L1 + 2*L5
         f[10,:]   = -L2 - 2*L4
         f[11,:]   = -L3
-        f[12,:]   = np.zeros(tf.shape)
+#        f[12,:]   = np.zeros(tf.shape)
         
-        return np.dot(f,np.diag(tf))
+#        return np.dot(f,np.diag(tf))
+        return f
     
-    def boundary_conditions(self,sA,sB):
+    def boundary_conditions_IS(self,sA,sB):
         """Creates boundary conditions for solving a boundary value problem
         """
         
-        x,y,z,dx,dy,dz,L1,L2,L3,L4,L5,L6,tf = sB
+        x,y,z,dx,dy,dz,L1,L2,L3,L4,L5,L6 = sB
+#        x,y,z,dx,dy,dz,L1,L2,L3,L4,L5,L6,tf = sB
         mu = self.mu
         g0 = self.g0
         
@@ -157,14 +162,15 @@ class CR3BP_SolarSail_Ideal(object):
         BCf1 = (sB[0] - self.sB[0])
         BCf2 = (sB[1] - self.sB[1])
         BCf3 = (sB[2] - self.sB[2])
-        BCf4 = (sB[3] - self.sB[3])*tf
-        BCf5 = (sB[4] - self.sB[4])*tf
-        BCf6 = (sB[5] - self.sB[5])*tf
+        BCf4 = (sB[3] - self.sB[3])
+        BCf5 = (sB[4] - self.sB[4])
+        BCf6 = (sB[5] - self.sB[5])
         
-        HB = L1*dx + L2*dy + L3*dz + L4*(2*dy + g0*(L4*np.sqrt(y**2 + z**2 + (mu + x)**2)*np.sin(B) + (mu + x)*np.sqrt(L4**2 + L5**2 + L6**2)*np.sin(B - BL))*np.cos(B)**2/(np.sqrt(L4**2 + L5**2 + L6**2)*(y**2 + z**2 + (mu + x)**2)**(3/2.)*np.sin(BL)) + mu*(-mu - x + 1)/(y**2 + z**2 + (-mu - x + 1)**2)**(3/2.) + x + (-mu + 1)*(-mu - x)/(y**2 + z**2 + (mu + x)**2)**(3/2.)) + L5*(-2*dx + g0*(L5*np.sqrt(y**2 + z**2 + (mu + x)**2)*np.sin(B) + y*np.sqrt(L4**2 + L5**2 + L6**2)*np.sin(B - BL))*np.cos(B)**2/(np.sqrt(L4**2 + L5**2 + L6**2)*(y**2 + z**2 + (mu + x)**2)**(3/2.)*np.sin(BL)) - mu*y/(y**2 + z**2 + (-mu - x + 1)**2)**(3/2.) - y*(-mu + 1)/(y**2 + z**2 + (mu + x)**2)**(3/2.) + y) + L6*(g0*(L6*np.sqrt(y**2 + z**2 + (mu + x)**2)*np.sin(B) + z*np.sqrt(L4**2 + L5**2 + L6**2)*np.sin(B - BL))*np.cos(B)**2/(np.sqrt(L4**2 + L5**2 + L6**2)*(y**2 + z**2 + (mu + x)**2)**(3/2.)*np.sin(BL)) - mu*z/(y**2 + z**2 + (-mu - x + 1)**2)**(3/2.) - z*(-mu + 1)/(y**2 + z**2 + (mu + x)**2)**(3/2.))
-        HB = tf*(HB + 1)     
+#        HB = L1*dx + L2*dy + L3*dz + L4*(2*dy + g0*(L4*np.sqrt(y**2 + z**2 + (mu + x)**2)*np.sin(B) + (mu + x)*np.sqrt(L4**2 + L5**2 + L6**2)*np.sin(B - BL))*np.cos(B)**2/(np.sqrt(L4**2 + L5**2 + L6**2)*(y**2 + z**2 + (mu + x)**2)**(3/2.)*np.sin(BL)) + mu*(-mu - x + 1)/(y**2 + z**2 + (-mu - x + 1)**2)**(3/2.) + x + (-mu + 1)*(-mu - x)/(y**2 + z**2 + (mu + x)**2)**(3/2.)) + L5*(-2*dx + g0*(L5*np.sqrt(y**2 + z**2 + (mu + x)**2)*np.sin(B) + y*np.sqrt(L4**2 + L5**2 + L6**2)*np.sin(B - BL))*np.cos(B)**2/(np.sqrt(L4**2 + L5**2 + L6**2)*(y**2 + z**2 + (mu + x)**2)**(3/2.)*np.sin(BL)) - mu*y/(y**2 + z**2 + (-mu - x + 1)**2)**(3/2.) - y*(-mu + 1)/(y**2 + z**2 + (mu + x)**2)**(3/2.) + y) + L6*(g0*(L6*np.sqrt(y**2 + z**2 + (mu + x)**2)*np.sin(B) + z*np.sqrt(L4**2 + L5**2 + L6**2)*np.sin(B - BL))*np.cos(B)**2/(np.sqrt(L4**2 + L5**2 + L6**2)*(y**2 + z**2 + (mu + x)**2)**(3/2.)*np.sin(BL)) - mu*z/(y**2 + z**2 + (-mu - x + 1)**2)**(3/2.) - z*(-mu + 1)/(y**2 + z**2 + (mu + x)**2)**(3/2.))
+#        HB += 1    
         
-        BC = np.array([BCo1,BCo2,BCo3,BCo4,BCo5,BCo6,BCf1,BCf2,BCf3,BCf4,BCf5,BCf6,HB])
+#        BC = np.array([BCo1,BCo2,BCo3,BCo4,BCo5,BCo6,BCf1,BCf2,BCf3,BCf4,BCf5,BCf6,HB])
+        BC = np.array([BCo1,BCo2,BCo3,BCo4,BCo5,BCo6,BCf1,BCf2,BCf3,BCf4,BCf5,BCf6])
         
         return BC
     
@@ -176,13 +182,20 @@ class CR3BP_SolarSail_Ideal(object):
         x,y,z,dx,dy,dz,L1,L2,L3,L4,L5,L6,T = fsF
         self.sB = np.array([x,y,z,dx,dy,dz])
 
-        t = np.linspace(0,1,2)
+#        t = np.linspace(0,1,2)
+        t = np.linspace(0,T,2)
+#        sG = np.vstack([ fs0 , fsF ])
+        sG = np.vstack([ fs0[0:12] , fsF[0:12] ])
+        sol_TU = solve_bvp(self.EoM_Adjoint,self.boundary_conditions,t,sG.T,tol=1e-10)
+        s_TU = sol_TU.y.T
+        t_TU = sol_TU.x
         
-        sG = np.vstack([ fs0 , fsF ])
-        sol = solve_bvp(self.EoM_Adjoint,self.boundary_conditions,t,sG.T,tol=1e-10)
+        sol = solve_bvp(self.EoM_Adjoint_IS,self.boundary_conditions_IS,t_TU,s_TU.T,tol=1e-10)
+        print(sol.message)
         
         s = sol.y.T
         t_s = sol.x
             
         return s,t_s
-        
+    
+    
